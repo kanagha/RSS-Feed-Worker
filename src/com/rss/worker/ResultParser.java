@@ -47,7 +47,9 @@ public class ResultParser implements IResultParser {
 		}
 		index = line.indexOf("<guid>");
 		if (line.indexOf("<guid>") != -1) {
-			article.link = line.substring(index + 6, line.indexOf("</guid>"));
+			// the cnn news have guid starting with guid isPermaLink="false". So accounting for the whole length
+			// changed the length from 26 to 6
+			article.link = line.substring(index + 26, line.indexOf("</guid>"));
 		}
 		index = line.indexOf("<pubDate>");
 		if (line.indexOf("<pubDate>") != -1) {

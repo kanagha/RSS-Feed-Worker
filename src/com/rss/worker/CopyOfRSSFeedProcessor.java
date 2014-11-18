@@ -1,5 +1,5 @@
 package com.rss.worker;
-
+/*
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -17,7 +17,7 @@ import com.rss.worker.IRSSFeedFetcher.RSSFeedBody;
 
 import static com.rss.common.AWSDetails.SQS;
 
-public class RSSFeedProcessor implements Runnable {
+public class CopyOfRSSFeedProcessor implements Runnable {
 
 	private final String queueUrl;
 	private final String publisherUrl;
@@ -27,7 +27,7 @@ public class RSSFeedProcessor implements Runnable {
     private IRSSFeedCacheProvider mDataProvider;
     private List<URL> mURLlist = new ArrayList<URL>();
 
-    RSSFeedProcessor(String queueUrl, String publisherUrl, Message msg, IRSSFeedFetcher fetcher, IRSSFeedCacheProvider dataProvider) {
+    CopyOfRSSFeedProcessor(String queueUrl, String publisherUrl, Message msg, IRSSFeedFetcher fetcher, IRSSFeedCacheProvider dataProvider) {
         this.queueUrl = queueUrl;
         this.publisherUrl = publisherUrl;
         this.msg = msg;
@@ -45,11 +45,14 @@ public class RSSFeedProcessor implements Runnable {
 	        List<String> urlList = queueRequest.getURLList();
 	        
 	        // go to database and fetch etag if the same url exists
-	        
 	        List<RSSFeedBody> feedBodyList = new ArrayList<RSSFeedBody>();
 	        for (String url : urlList) {
-	        	String etag = DBDataProvider.getETagForFeedURL(url);	        	
-	            feedBodyList.add(new RSSFeedBody(url, etag));
+	        	FeedData data = mDataProvider.getInfoForUrl(url);
+	        	String etag = "";
+	        	if (data != null) {
+	        		etag = data.etag;
+	        	}
+	        	feedBodyList.add(new RSSFeedBody(url, etag));
 	        }
 	        
 	        // Now fetch the information using RSSFeedFetcher and add it to database.
@@ -57,17 +60,11 @@ public class RSSFeedProcessor implements Runnable {
 	        
 	        // AddRowsToTable(feedMap);
 	        
-	        /*for (RSSFeedBody feedBody : feedBodyList) {
+	        for (RSSFeedBody feedBody : feedBodyList) {
 	        	List<Article> articleList = new LinkedList<Article>();
 	        	articleList.addAll(feedMap.get(feedBody.URL).articles);
 	        	mDataProvider.addNewArticlesForUrl(feedBody.URL, articleList, feedBody.ETag);
-	        }*/
-	        for (RSSFeedBody feedBody : feedBodyList) {
-	        	FeedData data = feedMap.get(feedBody.URL);
-	        	for (Article article : data.articles) {
-	        		DBDataProvider.addArticles(article, feedBody.URL);
-	        	}
-	        }
+	        }	        
 	        
 	        // TODO just send a message in the queue with the job id
 	        //RSSFeedPublishRequest publisherRequest = new RSSFeedPublishRequest(queueRequest.getSubscriberId(), feedMap);
@@ -85,3 +82,4 @@ public class RSSFeedProcessor implements Runnable {
 		}
     }	
 }
+*/

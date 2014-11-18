@@ -1,11 +1,10 @@
 package com.rss.worker;
 
-
 import java.util.List;
 
 import com.rss.common.Article;
 
-public interface IRSSFeedDataProvider {
+public interface IRSSFeedCacheProvider {
 
 	public FeedData getInfoForUrl(String url);
 	

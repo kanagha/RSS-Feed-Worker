@@ -29,7 +29,7 @@ public class ListenerProcess extends Thread {
                 ReceiveMessageResult result = SQS.receiveMessage(
                         new ReceiveMessageRequest(queueUrl).withMaxNumberOfMessages(1));
                 for (Message msg : result.getMessages()) {
-                    executorService.submit(new RSSFeedProcessor(queueUrl, publisherUrl, msg, new RSSFeedFetcher(new ResultParser()), new RSSFeedDataProvider()));
+                    executorService.submit(new RSSFeedProcessor(queueUrl, publisherUrl, msg, new RSSFeedFetcher(new ResultParser()), new RSSFeedCacheProvider()));
                 }
                 sleep(1000);
             } catch (InterruptedException e) {

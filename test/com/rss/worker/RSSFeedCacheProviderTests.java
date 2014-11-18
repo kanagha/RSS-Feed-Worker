@@ -11,7 +11,7 @@ import redis.clients.jedis.Jedis;
 import com.rss.common.Article;
 import com.rss.worker.IRSSFeedFetcher.RSSFeedBody;
 
-public class RSSFeedDataProviderTests {
+public class RSSFeedCacheProviderTests {
 	public static void main(String args[]){
 		Setup();
         CheckIfRecordIsEmpty();
@@ -33,7 +33,7 @@ public class RSSFeedDataProviderTests {
 	}
 
 	private static void CheckIfRecordIsEmpty() {
-		IRSSFeedDataProvider dataProvider = new RSSFeedDataProvider();
+		IRSSFeedCacheProvider dataProvider = new RSSFeedCacheProvider();
 		FeedData data = dataProvider.getInfoForUrl("http://rss.cnn.com/rss/edition.rss");
 		Assert.isNull(data);		
 	}
@@ -44,7 +44,7 @@ public class RSSFeedDataProviderTests {
 		list.add(new RSSFeedBody("http://rss.cnn.com/rss/edition.rss", ""));
 		Map<String, FeedData> articleList = fetcher.fetchFeeds(list);
 		
-		IRSSFeedDataProvider dataProvider = new RSSFeedDataProvider();
+		IRSSFeedCacheProvider dataProvider = new RSSFeedCacheProvider();
 		for (RSSFeedBody feedBody : list) {
 			String url = feedBody.URL;
 			dataProvider.addNewArticlesForUrl(url, (List<Article>) articleList.get(url).articles, articleList.get(url).etag);
@@ -54,7 +54,6 @@ public class RSSFeedDataProviderTests {
 		for (RSSFeedBody feedBody : list) {
 			FeedData data = dataProvider.getInfoForUrl(feedBody.URL);
 			Assert.notEmpty(data.articles);
-		}
-		
+		}		
 	}
 }

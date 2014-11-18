@@ -1,25 +1,21 @@
 package com.rss.worker;
 
 import java.util.List;
-
-import org.json.simple.parser.ParseException;
-
-import redis.clients.jedis.Jedis;
-
+import redis.clients.jedis.ShardedJedis;
 import com.rss.common.Article;
 
-public class RSSFeedDataProvider implements IRSSFeedDataProvider {
+public class RSSFeedCacheProvider implements IRSSFeedCacheProvider {
 	
 	private static final int NOOFENTRIES = 50;
 
 	public FeedData getInfoForUrl(String url) {
-		Jedis jedis = new Jedis("localhost");
+		//Jedis jedis = new Jedis("localhost");
+		ShardedJedis jedis = CacheInitializer.getInstance().getResource();
 		String feedDataString = jedis.get(url);
 		FeedData data = null;
 		if (feedDataString != null) {
 			data = new FeedData(feedDataString);
-		}			
-		jedis.close();
+		}		
 		return data;
 	}
 
@@ -38,7 +34,8 @@ public class RSSFeedDataProvider implements IRSSFeedDataProvider {
 		}
 		
 		// Now add it to redis
-		Jedis jedis = new Jedis("localhost");
+		// Jedis jedis = new Jedis("localhost");
+		ShardedJedis jedis = CacheInitializer.getInstance().getResource();
 		jedis.set(url, data.serializeToJson());
 	}
 }
