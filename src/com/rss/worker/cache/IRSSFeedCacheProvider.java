@@ -1,8 +1,9 @@
-package com.rss.worker;
+package com.rss.worker.cache;
 
 import java.util.List;
 
 import com.rss.common.Article;
+import com.rss.worker.feedfetcher.FeedData;
 
 public interface IRSSFeedCacheProvider {
 

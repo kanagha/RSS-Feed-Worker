@@ -1,4 +1,4 @@
-package com.rss.worker;
+package com.rss.worker.feedfetcher;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -18,15 +18,29 @@ public class ResultParser implements IResultParser {
 		String thisLine = null;
 	      String itemPrefix = "<item>";
 	      String itemSuffix = "</item>";
+	      boolean hasStarted = false;
+	      StringBuffer combinedLine = null;
 	      try{
 	         // open input stream test.txt for reading purpose.
 	         BufferedReader br = new BufferedReader(new InputStreamReader(xmlFeedInputStream));
 	         while ((thisLine = br.readLine()) != null) {
 	            //System.out.println(thisLine);
-	            if (thisLine.startsWith(itemPrefix)) {
-	            	Article article = SplitString(thisLine);
-	            	articleList.add(article);
-	            }                     
+	            if (thisLine.contains(itemPrefix)) {
+	            	hasStarted = true;
+	            	
+	            	combinedLine = new StringBuffer();
+	            }
+	            if (hasStarted) {
+	            	combinedLine.append(thisLine);
+	            }
+	            if (hasStarted && thisLine.contains(itemSuffix)) {
+	            	hasStarted = false;	            	
+	            	Article article = SplitString(combinedLine.toString());
+	            	if (article.guid != null) {
+	            		articleList.add(article);
+	            	}
+	            }
+	            
 	         }       
 	      } catch(IOException e){
 	         System.out.println("IOException occurred while parsing XML Feed");
@@ -34,7 +48,8 @@ public class ResultParser implements IResultParser {
 	      return articleList;
 	   }
 
-	private static Article SplitString(String line) {		
+	private static Article SplitString(String line) {
+		//System.out.println("Line inside split string: " + line.toString());
 		Article article = new Article();
 		int index = line.indexOf("<title>");
 		index = index + 7;
@@ -46,11 +61,18 @@ public class ResultParser implements IResultParser {
 			article.description =line.substring(index + 13, line.indexOf("</description>"));
 		}
 		index = line.indexOf("<guid>");
-		if (line.indexOf("<guid>") != -1) {
+		if (index != -1) {
 			// the cnn news have guid starting with guid isPermaLink="false". So accounting for the whole length
 			// changed the length from 26 to 6
-			article.link = line.substring(index + 26, line.indexOf("</guid>"));
+			article.guid = line.substring(index + 6, line.indexOf("</guid>"));
+		} else {
+			if ((index = line.indexOf("<guid isPermaLink=")) != -1) {
+				// the cnn news have guid starting with guid isPermaLink="false". So accounting for the whole length
+				// changed the length from 26 to 6
+				article.guid = line.substring(index + 26, line.indexOf("</guid>"));
+			}
 		}
+		
 		index = line.indexOf("<pubDate>");
 		if (line.indexOf("<pubDate>") != -1) {
 			article.publishedDate = line.substring(index + 9, line.indexOf("</pubDate>"));

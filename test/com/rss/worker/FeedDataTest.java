@@ -12,6 +12,7 @@ import org.springframework.util.Assert;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.rss.common.Article;
+import com.rss.worker.feedfetcher.FeedData;
 
 public class FeedDataTest {
 	public static void main(String args[]) {
@@ -33,7 +34,7 @@ public class FeedDataTest {
 		
 		FeedData body = new FeedData();
 		body.etag = "etag";
-		body.articles= (Deque<Article>) articleList;
+		body.articles= articleList;
 		System.out.println(body.serializeToJson());
 		
 		
@@ -51,14 +52,14 @@ public class FeedDataTest {
 			
 			FeedData data = new FeedData();
 			data.etag = "etag";
-			data.articles = (Deque<Article>) articleList;
+			data.articles = articleList;
 			String feedDataString = gson.toJson(data);
 			System.out.println("String  :" + feedDataString);
 			
 			FeedData dataCopy = gson.fromJson(feedDataString, FeedData.class);
 			System.out.println(dataCopy.etag);
-			System.out.println(dataCopy.articles.getFirst().title);
-			
+			System.out.println(dataCopy.articles.get(0).title);
+		
 			
 			
 			FeedData data1 = new FeedData(body.serializeToJson());

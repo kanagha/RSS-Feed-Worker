@@ -1,4 +1,4 @@
-package com.rss.worker;
+package com.rss.worker.cache;
 
 import java.util.LinkedList;
 import java.util.List;

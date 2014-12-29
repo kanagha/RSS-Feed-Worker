@@ -8,7 +8,7 @@ import org.json.simple.parser.ParseException;
 public class RSSFeedQueueRequestTest {
 	public static void main(String args[]) throws IOException, ParseException {
 		RSSFeedQueueRequest request = new RSSFeedQueueRequest();
-		request.subscriberId = 1;
+		request.jobId = 1;
 		request.URLlist = new LinkedList<String>();
 		request.URLlist.add("https://www.youtube.com/watch?v=YeRNErD81VA");
 		request.URLlist.add("https://github.com/awslabs/java-meme-generator-sample");
@@ -17,7 +17,7 @@ public class RSSFeedQueueRequestTest {
 
 		System.out.println(jsonString);
 		RSSFeedQueueRequest req = new RSSFeedQueueRequest(jsonString);
-		System.out.println("Id : "+ req.subscriberId);
+		System.out.println("Id : "+ req.jobId);
 		System.out.println("Size : "+ req.URLlist.size());
 		System.out.println("Size : "+ req.URLlist.get(0));
 		System.out.println("Size : "+ req.URLlist.get(1));

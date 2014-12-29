@@ -1,4 +1,4 @@
-package com.rss.worker;
+package com.rss.worker.feedfetcher;
 
 import java.io.InputStream;
 import java.util.List;

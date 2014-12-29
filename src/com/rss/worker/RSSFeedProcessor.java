@@ -11,9 +11,14 @@ import org.json.simple.parser.ParseException;
 
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
 import com.amazonaws.services.sqs.model.Message;
+import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.rss.common.Article;
+import com.rss.common.DBDataProvider;
 import com.rss.common.RSSFeedQueueRequest;
-import com.rss.worker.IRSSFeedFetcher.RSSFeedBody;
+import com.rss.worker.cache.IRSSFeedCacheProvider;
+import com.rss.worker.feedfetcher.FeedData;
+import com.rss.worker.feedfetcher.IRSSFeedFetcher;
+import com.rss.worker.feedfetcher.IRSSFeedFetcher.RSSFeedUrl;
 
 import static com.rss.common.AWSDetails.SQS;
 
@@ -24,21 +29,22 @@ public class RSSFeedProcessor implements Runnable {
     private final Message msg;
 
     private IRSSFeedFetcher mFetcher;
-    private IRSSFeedCacheProvider mDataProvider;
+    private IRSSFeedCacheProvider mCacheProvider;
     private List<URL> mURLlist = new ArrayList<URL>();
 
-    RSSFeedProcessor(String queueUrl, String publisherUrl, Message msg, IRSSFeedFetcher fetcher, IRSSFeedCacheProvider dataProvider) {
-        this.queueUrl = queueUrl;
+    RSSFeedProcessor(String getJobQueueUrl, String publisherUrl, Message msg, IRSSFeedFetcher fetcher, IRSSFeedCacheProvider dataProvider) {
+        this.queueUrl = getJobQueueUrl;
         this.publisherUrl = publisherUrl;
         this.msg = msg;
         mFetcher = fetcher;
-        mDataProvider = dataProvider;
+        mCacheProvider = dataProvider;
     }
 
     public void run() {
         String request =  msg.getBody();       
         
         RSSFeedQueueRequest queueRequest = null;
+
 		try {
 			queueRequest = new RSSFeedQueueRequest(request);
 			// Fetch urls to be processed.
@@ -46,42 +52,33 @@ public class RSSFeedProcessor implements Runnable {
 	        
 	        // go to database and fetch etag if the same url exists
 	        
-	        List<RSSFeedBody> feedBodyList = new ArrayList<RSSFeedBody>();
+	        List<RSSFeedUrl> feedUrlListWithETag = new ArrayList<RSSFeedUrl>();
 	        for (String url : urlList) {
 	        	String etag = DBDataProvider.getETagForFeedURL(url);	        	
-	            feedBodyList.add(new RSSFeedBody(url, etag));
+	            feedUrlListWithETag.add(new RSSFeedUrl(url, etag));
 	        }
 	        
 	        // Now fetch the information using RSSFeedFetcher and add it to database.
-	        Map<String, FeedData> feedMap = mFetcher.fetchFeeds(feedBodyList);
+	        Map<String, FeedData> feedMap = mFetcher.fetchFeeds(feedUrlListWithETag);
 	        
-	        // AddRowsToTable(feedMap);
-	        
-	        /*for (RSSFeedBody feedBody : feedBodyList) {
-	        	List<Article> articleList = new LinkedList<Article>();
-	        	articleList.addAll(feedMap.get(feedBody.URL).articles);
-	        	mDataProvider.addNewArticlesForUrl(feedBody.URL, articleList, feedBody.ETag);
-	        }*/
-	        for (RSSFeedBody feedBody : feedBodyList) {
-	        	FeedData data = feedMap.get(feedBody.URL);
+	        // add rows to table	        
+	        for (RSSFeedUrl feedUrl : feedUrlListWithETag) {
+	        	FeedData data = feedMap.get(feedUrl.URL);
 	        	for (Article article : data.articles) {
-	        		DBDataProvider.addArticles(article, feedBody.URL);
+	        		DBDataProvider.addArticles(article, feedUrl.URL);
 	        	}
-	        }
+	        }	        
 	        
-	        // TODO just send a message in the queue with the job id
-	        //RSSFeedPublishRequest publisherRequest = new RSSFeedPublishRequest(queueRequest.getSubscriberId(), feedMap);
-	        
-	        //TODO Not sure
+	        //TODO Need to delete message. Not sure if the message needs to be deleted before
 	        SQS.deleteMessage(new DeleteMessageRequest(queueUrl, msg.getReceiptHandle()));
 	        
 	        // And send a message to publisher queue
-	        //SQS.sendMessage(new SendMessageRequest(publisherUrl, publisherRequest.serializeToJSON()));
+	        SQS.sendMessage(new SendMessageRequest(publisherUrl, String.valueOf(queueRequest.jobId)));
 
 		} catch (IOException e) {
 			System.out.println("IOException occurred while processing feed "+ e);
 		} catch (ParseException e) {
 			System.out.println("Parsing exception occurred while processing feed " + e);
 		}
-    }	
+    }
 }

@@ -1,8 +1,11 @@
-package com.rss.worker;
+package com.rss.worker.cache;
 
 import java.util.List;
+
 import redis.clients.jedis.ShardedJedis;
+
 import com.rss.common.Article;
+import com.rss.worker.feedfetcher.FeedData;
 
 public class RSSFeedCacheProvider implements IRSSFeedCacheProvider {
 	
@@ -27,10 +30,11 @@ public class RSSFeedCacheProvider implements IRSSFeedCacheProvider {
 			data = new FeedData();
 		}
 		for (Article article : newArticles) {
-			data.articles.offerFirst(article);
+			//TODO PLEASE FIX IT!!!!!!!!!!!!!!!!!!!!!
+			/*data.articles.offerFirst(article);
 			if (data.articles.size() > NOOFENTRIES) {
 				data.articles.pollLast();
-			}
+			}*/
 		}
 		
 		// Now add it to redis

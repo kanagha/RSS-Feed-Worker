@@ -7,10 +7,11 @@ import com.amazonaws.services.sqs.model.GetQueueUrlRequest;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
+import com.rss.worker.cache.RSSFeedCacheProvider;
+import com.rss.worker.feedfetcher.RSSFeedFetcher;
+import com.rss.worker.feedfetcher.ResultParser;
 
-import static com.rss.common.AWSDetails.SQS;
-import static com.rss.common.AWSDetails.SQS_QUEUE_NAME;
-import static com.rss.common.AWSDetails.SQS_PUBLISHER_QUEUE;
+import static com.rss.common.AWSDetails.*;
 
 public class ListenerProcess extends Thread {
 	
@@ -22,14 +23,14 @@ public class ListenerProcess extends Thread {
 	
 	public void run() {
 		
-		String queueUrl = SQS.getQueueUrl(new GetQueueUrlRequest(SQS_QUEUE_NAME)).getQueueUrl();
-		String publisherUrl = SQS.getQueueUrl(new GetQueueUrlRequest(SQS_PUBLISHER_QUEUE)).getQueueUrl();
+		String jobQueueUrl = SQS.getQueueUrl(new GetQueueUrlRequest(SQS_ADDJOB_GETFEEDS_QUEUE)).getQueueUrl();
+		String feedsQueueUrl = SQS.getQueueUrl(new GetQueueUrlRequest(SQS_GETFEEDS_QUEUE)).getQueueUrl();
 		while (true) {
             try {
                 ReceiveMessageResult result = SQS.receiveMessage(
-                        new ReceiveMessageRequest(queueUrl).withMaxNumberOfMessages(1));
+                        new ReceiveMessageRequest(jobQueueUrl).withMaxNumberOfMessages(1));
                 for (Message msg : result.getMessages()) {
-                    executorService.submit(new RSSFeedProcessor(queueUrl, publisherUrl, msg, new RSSFeedFetcher(new ResultParser()), new RSSFeedCacheProvider()));
+                    executorService.submit(new RSSFeedProcessor(jobQueueUrl, feedsQueueUrl, msg, new RSSFeedFetcher(new ResultParser()), new RSSFeedCacheProvider()));
                 }
                 sleep(1000);
             } catch (InterruptedException e) {

@@ -1,4 +1,4 @@
-package com.rss.worker;
+package com.rss.worker.feedfetcher;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -22,44 +22,45 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import com.rss.common.Article;
+import com.rss.common.DBDataProvider;
 
 public class RSSFeedFetcher implements IRSSFeedFetcher {
 	
 	IResultParser mParser;
 	
-	RSSFeedFetcher(IResultParser parser){
+	public RSSFeedFetcher(IResultParser parser){
 		mParser = parser;
 	}
 
-	public Map<String, FeedData> fetchFeeds(List<RSSFeedBody> feedList) {
+	public Map<String, FeedData> fetchFeeds(List<RSSFeedUrl> feedList) {
 		Map<String, FeedData> feedMap = new HashMap<String, FeedData>();
-		for (RSSFeedBody body : feedList) {
+		for (RSSFeedUrl feedUrl : feedList) {
 			
 			FeedData feedResult = new FeedData();
 
 			// Make a GET request using the URL and ETag
 			
 			try {
-				//URL url = new URL(body.URL);
 				DefaultHttpClient client = new DefaultHttpClient();
-				HttpGet get = new HttpGet(body.URL);
+				HttpGet get = new HttpGet(feedUrl.URL);
 				
-				if (body.ETag != null && !body.ETag.isEmpty()) {
-					get.addHeader("If-None-Match", body.ETag);
+				if (feedUrl.ETag != null && !feedUrl.ETag.isEmpty()) {
+					get.addHeader("If-None-Match", feedUrl.ETag);
 				}				
 				HttpResponse response = client.execute(get);
 				HttpEntity entity = response.getEntity();
 				Header[] headers = response.getAllHeaders();
 				String latestETag = "";
 				for (Header header : headers) {
-					if (header.getName().compareToIgnoreCase("ETAG") == 0) {
+					if (header.getName().compareToIgnoreCase("etag") == 0) {
 						latestETag = header.getValue();
 					}
 				}
 				// Set etag
 				feedResult.etag = latestETag;
-				
-				
+				DBDataProvider.addFeedURL(feedUrl.URL, feedResult.etag);
+
+				// TODO: How to keep this file name random
 				File file = new File("tmp.xml");
 				PrintWriter writer = new PrintWriter(file);
 				if (entity != null && entity.getContent() != null) {
@@ -70,23 +71,12 @@ public class RSSFeedFetcher implements IRSSFeedFetcher {
 					}
 					writer.close();
 				} else {
-					System.out.println("Either entity or getContent is null for URL : " + body.URL);
+					System.out.println("Either entity or getContent is null for URL : " + feedUrl.URL);
 				}
 				
-				/*// TODO: How to keep this file name random
-				File file = new File("tmp.xml");
-				PrintWriter writer = new PrintWriter(file);				
-				BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
-				String line = null;
-				while ((line = reader.readLine()) != null) {
-					writer.println(line);
-				}
-				writer.close();*/		
-				List<Article> articleList = mParser.parseXMLFeed(new FileInputStream(file));
-				
-				feedResult.articles.addAll(articleList);
-				
-				feedMap.put(body.URL, feedResult);
+				List<Article> articleList = mParser.parseXMLFeed(new FileInputStream(file));				
+				feedResult.articles.addAll(articleList);				
+				feedMap.put(feedUrl.URL, feedResult);
 				// Now delete the file
 				file.delete();
 			} catch (FileNotFoundException e1) {
