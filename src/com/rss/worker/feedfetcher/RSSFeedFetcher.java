@@ -5,12 +5,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,11 +15,13 @@ import java.util.Map;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.rss.common.Article;
 import com.rss.common.DBDataProvider;
+import com.rss.common.cache.FeedData;
 
 public class RSSFeedFetcher implements IRSSFeedFetcher {
 	
@@ -36,12 +35,10 @@ public class RSSFeedFetcher implements IRSSFeedFetcher {
 		Map<String, FeedData> feedMap = new HashMap<String, FeedData>();
 		for (RSSFeedUrl feedUrl : feedList) {
 			
-			FeedData feedResult = new FeedData();
-
-			// Make a GET request using the URL and ETag
+			FeedData feedResult = new FeedData();			
 			
 			try {
-				DefaultHttpClient client = new DefaultHttpClient();
+				HttpClient client = HttpClientBuilder.create().build();
 				HttpGet get = new HttpGet(feedUrl.URL);
 				
 				if (feedUrl.ETag != null && !feedUrl.ETag.isEmpty()) {
@@ -61,7 +58,9 @@ public class RSSFeedFetcher implements IRSSFeedFetcher {
 				DBDataProvider.addFeedURL(feedUrl.URL, feedResult.etag);
 
 				// TODO: How to keep this file name random
-				File file = new File("tmp.xml");
+				String filename = "tmp" + System.currentTimeMillis() + ".xml";
+				File file = new File(filename);
+				System.out.println("Full path: " + file.getAbsolutePath());
 				PrintWriter writer = new PrintWriter(file);
 				if (entity != null && entity.getContent() != null) {
 					BufferedReader reader = new BufferedReader(new InputStreamReader(entity.getContent()));
@@ -71,7 +70,8 @@ public class RSSFeedFetcher implements IRSSFeedFetcher {
 					}
 					writer.close();
 				} else {
-					System.out.println("Either entity or getContent is null for URL : " + feedUrl.URL);
+					System.out.println("Either entity or getContent is null for URL : " + feedUrl.URL + " , entity :" + entity
+							+ " entity.getContent() :" + entity!=null? entity.getContent():null);
 				}
 				
 				List<Article> articleList = mParser.parseXMLFeed(new FileInputStream(file));				

@@ -1,9 +1,9 @@
 package com.rss.worker;
 
+import static com.rss.common.aws.AWSDetails.SQS;
+
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -15,12 +15,9 @@ import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.rss.common.Article;
 import com.rss.common.DBDataProvider;
 import com.rss.common.RSSFeedQueueRequest;
-import com.rss.worker.cache.IRSSFeedCacheProvider;
-import com.rss.worker.feedfetcher.FeedData;
+import com.rss.common.cache.FeedData;
 import com.rss.worker.feedfetcher.IRSSFeedFetcher;
 import com.rss.worker.feedfetcher.IRSSFeedFetcher.RSSFeedUrl;
-
-import static com.rss.common.AWSDetails.SQS;
 
 public class RSSFeedProcessor implements Runnable {
 
@@ -29,15 +26,12 @@ public class RSSFeedProcessor implements Runnable {
     private final Message msg;
 
     private IRSSFeedFetcher mFetcher;
-    private IRSSFeedCacheProvider mCacheProvider;
-    private List<URL> mURLlist = new ArrayList<URL>();
 
-    RSSFeedProcessor(String getJobQueueUrl, String publisherUrl, Message msg, IRSSFeedFetcher fetcher, IRSSFeedCacheProvider dataProvider) {
+    RSSFeedProcessor(String getJobQueueUrl, String publisherUrl, Message msg, IRSSFeedFetcher fetcher) {
         this.queueUrl = getJobQueueUrl;
         this.publisherUrl = publisherUrl;
         this.msg = msg;
         mFetcher = fetcher;
-        mCacheProvider = dataProvider;
     }
 
     public void run() {
@@ -54,7 +48,8 @@ public class RSSFeedProcessor implements Runnable {
 	        
 	        List<RSSFeedUrl> feedUrlListWithETag = new ArrayList<RSSFeedUrl>();
 	        for (String url : urlList) {
-	        	String etag = DBDataProvider.getETagForFeedURL(url);	        	
+	        	String etag = DBDataProvider.getETagForFeedURL(url);
+	        	System.out.println("Fetching etag: " + etag  + " , for url : " + url);
 	            feedUrlListWithETag.add(new RSSFeedUrl(url, etag));
 	        }
 	        
@@ -69,16 +64,18 @@ public class RSSFeedProcessor implements Runnable {
 	        	}
 	        }	        
 	        
-	        //TODO Need to delete message. Not sure if the message needs to be deleted before
+	        //Delete the message to make sure, it is not getting picked up again
 	        SQS.deleteMessage(new DeleteMessageRequest(queueUrl, msg.getReceiptHandle()));
 	        
 	        // And send a message to publisher queue
-	        SQS.sendMessage(new SendMessageRequest(publisherUrl, String.valueOf(queueRequest.jobId)));
+	        SQS.sendMessage(new SendMessageRequest(publisherUrl, String.valueOf(queueRequest.channelId)));
 
 		} catch (IOException e) {
 			System.out.println("IOException occurred while processing feed "+ e);
 		} catch (ParseException e) {
 			System.out.println("Parsing exception occurred while processing feed " + e);
+		} catch (Exception e) {
+			System.out.println("Received an exception : " + e);
 		}
     }
 }

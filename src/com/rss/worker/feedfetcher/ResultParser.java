@@ -11,34 +11,49 @@ import java.util.List;
 import com.rss.common.Article;
 
 public class ResultParser implements IResultParser {
+	
+	private static final String ITEM_PREFIX = "<item>";
+	private static final String ITEM_SUFFIX = "</item>";
+	private static final String TITLE_PREFIX = "<title>";
+	private static final String TITLE_SUFFIX = "</title>";
+	private static final String DESC_PREFIX = "<description>";
+	private static final String DESC_SUFFIX = "</description>";
+	private static final String GUID_PREFIX = "<guid>";
+	private static final String GUID_SUFFIX = "</guid>";
+	private static final String PUBDATE_PREFIX = "<pubDate>";
+	private static final String PUBDATE_SUFFIX = "</pubDate>";
 
 	public List<Article> parseXMLFeed(InputStream xmlFeedInputStream) {
 		// parse all the xml feeds to list of article
 		List<Article> articleList = new LinkedList<Article>();
 		String thisLine = null;
-	      String itemPrefix = "<item>";
-	      String itemSuffix = "</item>";
 	      boolean hasStarted = false;
 	      StringBuffer combinedLine = null;
 	      try{
-	         // open input stream test.txt for reading purpose.
 	         BufferedReader br = new BufferedReader(new InputStreamReader(xmlFeedInputStream));
 	         while ((thisLine = br.readLine()) != null) {
-	            //System.out.println(thisLine);
-	            if (thisLine.contains(itemPrefix)) {
+	        	 int suffixPos = -1;
+	        	 
+	            while (thisLine.contains(ITEM_PREFIX)) {
 	            	hasStarted = true;
+	            	System.out.println("Contains a new line");
 	            	
 	            	combinedLine = new StringBuffer();
-	            }
-	            if (hasStarted) {
-	            	combinedLine.append(thisLine);
-	            }
-	            if (hasStarted && thisLine.contains(itemSuffix)) {
-	            	hasStarted = false;	            	
-	            	Article article = SplitString(combinedLine.toString());
-	            	if (article.guid != null) {
-	            		articleList.add(article);
-	            	}
+	            	
+	            	if (hasStarted) {
+		            	combinedLine.append(thisLine);
+		            }
+		            if (hasStarted && thisLine.contains(ITEM_SUFFIX)) {
+		            	hasStarted = false;
+		            	suffixPos = thisLine.indexOf(ITEM_SUFFIX) + ITEM_SUFFIX.length();
+		            	Article article = SplitString(combinedLine.toString());
+		            	System.out.println("Parsing an article");
+		            	if (article.guid != null) {
+		            		System.out.println("Contained a guid:");
+		            		articleList.add(article);
+		            	}
+		            	thisLine = thisLine.substring(suffixPos);
+		            }
 	            }
 	            
 	         }       
@@ -49,40 +64,34 @@ public class ResultParser implements IResultParser {
 	   }
 
 	private static Article SplitString(String line) {
-		//System.out.println("Line inside split string: " + line.toString());
 		Article article = new Article();
-		int index = line.indexOf("<title>");
+		
+		int index = line.indexOf(TITLE_PREFIX);
 		index = index + 7;
-		if (line.indexOf("<title>") != -1) {
-			article.title =line.substring(index, line.indexOf("</title>"));
+		if (line.indexOf(TITLE_PREFIX) != -1) {
+			article.title =line.substring(index, line.indexOf(TITLE_SUFFIX));
 		}
-		index = line.indexOf("<description>");
-		if (line.indexOf("<description>") != -1) {
-			article.description =line.substring(index + 13, line.indexOf("</description>"));
+		index = line.indexOf(DESC_PREFIX);
+		if (line.indexOf(DESC_PREFIX) != -1) {
+			article.description =line.substring(index + 13, line.indexOf(DESC_SUFFIX));
 		}
-		index = line.indexOf("<guid>");
+		index = line.indexOf(GUID_PREFIX);
 		if (index != -1) {
 			// the cnn news have guid starting with guid isPermaLink="false". So accounting for the whole length
 			// changed the length from 26 to 6
-			article.guid = line.substring(index + 6, line.indexOf("</guid>"));
+			article.guid = line.substring(index + 6, line.indexOf(GUID_SUFFIX));
 		} else {
 			if ((index = line.indexOf("<guid isPermaLink=")) != -1) {
 				// the cnn news have guid starting with guid isPermaLink="false". So accounting for the whole length
 				// changed the length from 26 to 6
-				article.guid = line.substring(index + 26, line.indexOf("</guid>"));
+				article.guid = line.substring(index + 26, line.indexOf(GUID_SUFFIX));
 			}
 		}
 		
-		index = line.indexOf("<pubDate>");
-		if (line.indexOf("<pubDate>") != -1) {
-			article.publishedDate = line.substring(index + 9, line.indexOf("</pubDate>"));
+		index = line.indexOf(PUBDATE_PREFIX);
+		if (line.indexOf(PUBDATE_PREFIX) != -1) {
+			article.publishedDate = line.substring(index + 9, line.indexOf(PUBDATE_SUFFIX));
 		}
-		
-		//System.out.println(line.substring(line.indexOf("<guid>")+ 6, line.indexOf("</guid>")));
-		//System.out.println(" Index is : " + line.indexOf("<description>"));
-		//System.out.println(line.substring(line.indexOf("<description>")+ 13, line.indexOf("</description>")));
-		//System.out.println(line.substring(line.indexOf("<pubDate>")+ 9, line.indexOf("</pubDate>")));
-		
 		return article;
 	}
 }

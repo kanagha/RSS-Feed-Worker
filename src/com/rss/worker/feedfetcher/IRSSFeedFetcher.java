@@ -3,7 +3,7 @@ package com.rss.worker.feedfetcher;
 import java.util.List;
 import java.util.Map;
 
-import com.rss.common.Article;
+import com.rss.common.cache.FeedData;
 
 public interface IRSSFeedFetcher {
 	
