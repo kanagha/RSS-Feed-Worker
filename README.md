@@ -27,3 +27,10 @@ To run:
 2) The jar can be deployed to EC2 instances as well.
 
 
+Languages/Technologies Used:
+============================
+1) Java
+
+2) SpringBoot/Spring/Amazon Simple Queue Service (SQS)/DynamoDB
+
+3) Web sockets
