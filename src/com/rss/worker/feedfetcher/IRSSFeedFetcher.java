@@ -3,8 +3,11 @@ package com.rss.worker.feedfetcher;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.stereotype.Component;
+
 import com.rss.common.cache.FeedData;
 
+@Component
 public interface IRSSFeedFetcher {
 	
 	public class RSSFeedUrl {

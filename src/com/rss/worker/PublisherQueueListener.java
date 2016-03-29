@@ -17,7 +17,7 @@ import com.rss.common.DBDataProvider;
  * Once a message is retrieved, it publishes the feeds to the client websocket endpoint
  *
  */
-public class PublisherQueueListenerProcess extends Thread {
+public class PublisherQueueListener extends Thread {
 	@Autowired 
 	private SimpMessagingTemplate template;	
 	

@@ -19,6 +19,12 @@ import com.rss.common.cache.FeedData;
 import com.rss.worker.feedfetcher.IRSSFeedFetcher;
 import com.rss.worker.feedfetcher.IRSSFeedFetcher.RSSFeedUrl;
 
+/**
+ * Processes a message from the FetchFeedsQueue
+ * and fetches latest feeds for all the associated urls
+ * in the given message
+ *
+ */
 public class RSSFeedProcessor implements Runnable {
 
 	private final String queueUrl;

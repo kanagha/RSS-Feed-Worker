@@ -12,7 +12,11 @@ import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.rss.worker.feedfetcher.RSSFeedFetcher;
 import com.rss.worker.feedfetcher.ResultParser;
 
-public class FetchFeedsQueueListenerProcess extends Thread {
+/**
+ * Thread that listens for messages sent to FetchFeedsQueue
+ * and sends them to separate processor.
+ */
+public class FetchFeedsQueueListener extends Thread {
 	
 	private final ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(10);
 	
