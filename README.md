@@ -16,8 +16,14 @@ An RSS Feed Aggregator that fetches latest feeds for URLs that the user is inter
 
 5) The publisher queue is constantly being monitored and once a message is received, the corresponding websocket endpoint is notified with the latest feeds.
 
+Work in progress:
+
+Publishing the latest feeds to the dynamic endpoints as per channel configured.
+
 To run:
 
 1) Run it as a simple java application.
 
 2) The jar can be deployed to EC2 instances as well.
+
+
