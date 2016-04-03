@@ -11,8 +11,8 @@ package com.rss.worker;
  *
  */
 public class Application {
-	public static void main(String args[]){
-		new FetchFeedsQueueListener().start();
-		new PublisherQueueListener().start();
-	}
+    public static void main(String args[]){
+        new FetchFeedsQueueListener().start();
+        new PublisherQueueListener().start();
+    }
 }

@@ -17,14 +17,14 @@ import com.rss.worker.feedfetcher.ResultParser;
  * and sends them to separate processor.
  */
 public class FetchFeedsQueueListener extends Thread {
-	
-	private final ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(10);
-	
-	public void run() {
-		
-		String jobQueueUrl = SQS.getQueueUrl(new GetQueueUrlRequest(SQS_ADDJOB_GETFEEDS_QUEUE)).getQueueUrl();
-		String feedsQueueUrl = SQS.getQueueUrl(new GetQueueUrlRequest(SQS_GETFEEDS_QUEUE)).getQueueUrl();
-		while (true) {
+    
+    private final ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(10);
+    
+    public void run() {
+        
+        String jobQueueUrl = SQS.getQueueUrl(new GetQueueUrlRequest(SQS_ADDJOB_GETFEEDS_QUEUE)).getQueueUrl();
+        String feedsQueueUrl = SQS.getQueueUrl(new GetQueueUrlRequest(SQS_GETFEEDS_QUEUE)).getQueueUrl();
+        while (true) {
             try {
                 ReceiveMessageResult result = SQS.receiveMessage(
                         new ReceiveMessageRequest(jobQueueUrl).withMaxNumberOfMessages(1)
@@ -36,5 +36,5 @@ public class FetchFeedsQueueListener extends Thread {
                 System.out.println("Exception occurred in ListenerProcess : " + e);
             }
         }
-	}
+    }
 }

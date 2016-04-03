@@ -9,16 +9,16 @@ import com.rss.common.cache.FeedData;
 
 @Component
 public interface IRSSFeedFetcher {
-	
-	public class RSSFeedUrl {
-		public String URL;
-		public String ETag;
-		
-		public RSSFeedUrl(String url, String etag) {
-			URL = url;
-			ETag = etag;
-		}
-	}
-	
-	Map<String, FeedData> fetchFeeds(List<RSSFeedUrl> feedList);
+    
+    public class RSSFeedUrl {
+        public String URL;
+        public String ETag;
+        
+        public RSSFeedUrl(String url, String etag) {
+            URL = url;
+            ETag = etag;
+        }
+    }
+    
+    Map<String, FeedData> fetchFeeds(List<RSSFeedUrl> feedList);
 }
